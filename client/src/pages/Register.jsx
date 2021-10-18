@@ -8,13 +8,6 @@ import { registerRoute } from "../utils/ApiRoutes";
 
 import "react-toastify/dist/ReactToastify.css";
 
-const toastOptions = {
-  position: "top-right",
-  autoClose: 8000,
-  pauseOnHover: true,
-  draggable: true,
-};
-
 const Register = () => {
   const navigate = useNavigate();
 
@@ -23,6 +16,19 @@ const Register = () => {
     email: "",
     password: "",
   });
+
+  const toastOptions = {
+    position: "top-right",
+    autoClose: 8000,
+    pauseOnHover: true,
+    draggable: true,
+  };  
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, []);
 
   const handleChange = (e) => {
     e.preventDefault();

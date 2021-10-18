@@ -51,3 +51,38 @@ module.exports.register = async (req, res, next) => {
         next(ex);
     }
 }
+
+module.exports.login = async (req, res, next) => {
+
+    try {
+
+        const {
+            username,
+            password
+        } = req.body;
+
+        const user = await User.findOne({
+            username
+        });
+
+        if (!user) {
+            return res.json({
+                status: false,
+                message: "Please validate your credentials"
+            })
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        return res.json({
+            status: true,
+            user: {
+                username: user.username,
+                username: user.email
+            }
+        });
+
+    } catch (ex) {
+        next(ex);
+    }
+}
