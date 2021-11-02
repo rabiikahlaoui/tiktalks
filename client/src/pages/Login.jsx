@@ -1,120 +1,163 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
-
-import { loginRoute } from "../utils/ApiRoutes";
-
+import { useNavigate, Link } from "react-router-dom";
+import Logo from "../assets/logo.svg";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { loginRoute } from "../utils/APIRoutes";
 
-const Login = () => {
+export default function Login() {
   const navigate = useNavigate();
-
-  const [loginForm, setLoginForm] = useState({
-    username: "",
-    password: "",
-  });
-
+  const [values, setValues] = useState({ username: "", password: "" });
   const toastOptions = {
-    position: "top-right",
+    position: "bottom-right",
     autoClose: 8000,
     pauseOnHover: true,
     draggable: true,
+    theme: "dark",
   };
-
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
       navigate("/");
     }
   }, []);
 
-  const handleChange = (e) => {
-    e.preventDefault();
-
-    setLoginForm({
-      ...loginForm,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (event) => {
+    setValues({ ...values, [event.target.name]: event.target.value });
   };
 
   const validateForm = () => {
-    const { username, password } = loginForm;
-
-    if (username.length < 3) {
-      toast.error("Username too short", toastOptions);
+    const { username, password } = values;
+    if (username === "") {
+      toast.error("Email and Password is required.", toastOptions);
+      return false;
+    } else if (password === "") {
+      toast.error("Email and Password is required.", toastOptions);
       return false;
     }
-
-    if (password.length < 8) {
-      toast.error("Please tape a valid password", toastOptions);
-      return false;
-    }
-
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (validateForm()) {
+      const { username, password } = values;
+      const { data } = await axios.post(loginRoute, {
+        username,
+        password,
+      });
+      if (data.status === false) {
+        toast.error(data.msg, toastOptions);
+      }
+      if (data.status === true) {
+        localStorage.setItem(
+          process.env.REACT_APP_LOCALHOST_KEY,
+          JSON.stringify(data.user)
+        );
 
-    if (!validateForm()) {
-      return;
+        navigate("/");
+      }
     }
-
-    const { username, password } = loginForm;
-    const { data } = await axios.post(loginRoute, {
-      username,
-      password,
-    });
-
-    if (!data.status) {
-      toast.error(data.message, toastOptions);
-      return;
-    }
-
-    // TODO: Replace with JWT
-    localStorage.setItem("token", JSON.stringify(data.user));
-    navigate("/");
   };
 
   return (
     <>
-      <LoginForm>
-        <form onSubmit={(e) => handleSubmit(e)}>
+      <FormContainer>
+        <form action="" onSubmit={(event) => handleSubmit(event)}>
           <div className="brand">
-            <h1>TikTalks</h1>
+            <img src={Logo} alt="logo" />
+            <h1>snappy</h1>
           </div>
           <input
             type="text"
-            name="username"
             placeholder="Username"
+            name="username"
             onChange={(e) => handleChange(e)}
+            min="3"
           />
           <input
             type="password"
-            name="password"
             placeholder="Password"
+            name="password"
             onChange={(e) => handleChange(e)}
           />
-
-          <button tyle="submit">Login</button>
-          <hr />
-          <Link to="/register">Create account</Link>
+          <button type="submit">Log In</button>
+          <span>
+            Don't have an account ? <Link to="/register">Create One.</Link>
+          </span>
         </form>
-      </LoginForm>
+      </FormContainer>
       <ToastContainer />
     </>
   );
-};
+}
 
-const LoginForm = styled.div`
-  max-width: 400px;
-  margin: 30px auto;
+const FormContainer = styled.div`
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  align-items: center;
+  background-color: #131324;
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+    img {
+      height: 5rem;
+    }
+    h1 {
+      color: white;
+      text-transform: uppercase;
+    }
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background-color: #00000076;
+    border-radius: 2rem;
+    padding: 5rem;
+  }
   input {
-    display: block;
+    background-color: transparent;
+    padding: 1rem;
+    border: 0.1rem solid #4e0eff;
+    border-radius: 0.4rem;
+    color: white;
     width: 100%;
-    margin: 8px 0;
+    font-size: 1rem;
+    &:focus {
+      border: 0.1rem solid #997af0;
+      outline: none;
+    }
+  }
+  button {
+    background-color: #4e0eff;
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+    &:hover {
+      background-color: #4e0eff;
+    }
+  }
+  span {
+    color: white;
+    text-transform: uppercase;
+    a {
+      color: #4e0eff;
+      text-decoration: none;
+      font-weight: bold;
+    }
   }
 `;
-
-export default Login;
